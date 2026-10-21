@@ -1,0 +1,324 @@
+<!doctype html>
+<html lang="hu">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Portfólió kivét-tervező</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: ledger-like tool. Controls panel on the left, results on the right; stacks below 900px. */
+:root{
+  --bg:#f6f7f5;--panel:#ffffff;--ink:#16201c;--ink-2:#4e5a55;--ink-3:#85908b;--line:#dfe3df;--line-2:#c9cfca;
+  --accent:#1f6f5c;--accent-bg:#e3f1ec;--stock:#2a6fd1;--bond:#17936c;--spend:#d4602a;--bad:#b83a32;--bad-bg:#f8e5e3;--good:#1f7a3a;--good-bg:#e4f2e7;
+  --grid:#e7eae7;--sans:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;--mono:"IBM Plex Mono",ui-monospace,Menlo,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#111614;--panel:#181f1c;--ink:#e8eeea;--ink-2:#aab6b0;--ink-3:#7a8781;--line:#27302c;--line-2:#36413c;
+  --accent:#5ec3a4;--accent-bg:#183229;--stock:#5b9bf0;--bond:#3fc095;--spend:#ef8a55;--bad:#ef7f76;--bad-bg:#3a1f1d;--good:#6fcf8a;--good-bg:#18301f;--grid:#232b28;color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#111614;--panel:#181f1c;--ink:#e8eeea;--ink-2:#aab6b0;--ink-3:#7a8781;--line:#27302c;--line-2:#36413c;
+  --accent:#5ec3a4;--accent-bg:#183229;--stock:#5b9bf0;--bond:#3fc095;--spend:#ef8a55;--bad:#ef7f76;--bad-bg:#3a1f1d;--good:#6fcf8a;--good-bg:#18301f;--grid:#232b28;color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:15px;line-height:1.5;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:20px 40px}
+.wrap{max-width:1240px;margin:0 auto;display:flex;flex-direction:column;gap:18px}
+header h1{font-size:24px;font-weight:600;margin:0;letter-spacing:-.01em;text-wrap:balance}
+header p{margin:4px 0 0;color:var(--ink-2);font-size:14px;max-width:70ch}
+.layout{display:grid;grid-template-columns:360px minmax(0,1fr);gap:18px;align-items:start}
+@media (max-width:900px){.layout{grid-template-columns:minmax(0,1fr)}}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:16px}
+.panel h2{font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--ink-3);margin:0 0 10px}
+.group+.group{margin-top:16px;padding-top:14px;border-top:1px solid var(--line)}
+.ctl{display:grid;grid-template-columns:minmax(0,1fr) 92px;gap:4px 10px;align-items:center;margin-bottom:10px}
+.ctl label{font-size:13px;color:var(--ink-2)}
+.ctl input[type=range]{grid-column:1/-1;grid-row:2;width:100%;accent-color:var(--accent)}
+.ctl input[type=number]{grid-column:2;grid-row:1;width:100%;font-family:var(--mono);font-size:13px;text-align:right;padding:4px 6px;border:1px solid var(--line-2);border-radius:6px;background:var(--bg);color:var(--ink)}
+.unit{font-size:11px;color:var(--ink-3)}
+.toggle{display:flex;align-items:center;gap:8px;font-size:14px;margin:6px 0;cursor:pointer}
+.toggle input{accent-color:var(--accent);width:16px;height:16px}
+.hint{font-size:12px;color:var(--ink-3);margin:2px 0 8px 24px}
+select,.btn,input[type=text]{font-family:var(--sans);font-size:13px;border:1px solid var(--line-2);border-radius:6px;background:var(--panel);color:var(--ink);padding:6px 10px}
+select{width:100%}
+.btn{cursor:pointer}.btn:hover{border-color:var(--accent);color:var(--accent)}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--panel)}.btn.primary:hover{color:var(--panel);opacity:.9}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.seg{display:inline-flex;border:1px solid var(--line-2);border-radius:7px;overflow:hidden}
+.seg button{font-family:var(--sans);font-size:13px;border:0;background:transparent;color:var(--ink-2);padding:6px 12px;cursor:pointer}
+.seg button[aria-pressed=true]{background:var(--accent);color:var(--panel)}
+.results{display:flex;flex-direction:column;gap:18px;min-width:0}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px}
+.kpi{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:12px 14px}
+.kpi .l{font-size:12px;color:var(--ink-3)}
+.kpi .v{font-family:var(--mono);font-size:22px;font-weight:500;font-variant-numeric:tabular-nums;margin-top:2px}
+.kpi .s{font-size:12px;color:var(--ink-2)}
+.pill{display:inline-block;font-size:11px;font-weight:500;padding:2px 8px;border-radius:99px}
+.pill.good{background:var(--good-bg);color:var(--good)}.pill.bad{background:var(--bad-bg);color:var(--bad)}.pill.mid{background:var(--accent-bg);color:var(--accent)}
+.ratio{display:flex;height:10px;border-radius:5px;overflow:hidden;gap:2px;margin:8px 0 4px}
+.ratio div{min-width:0}
+.ratio-l{display:flex;justify-content:space-between;font-size:12px;color:var(--ink-2);font-variant-numeric:tabular-nums}
+.charthead{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between;margin-bottom:10px}
+.legend{display:flex;flex-wrap:wrap;gap:14px;font-size:12px;color:var(--ink-2)}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.sw{width:12px;height:10px;border-radius:2px;display:inline-block}
+.sw.line{height:0;border-top:2px dashed}
+.chartbox{position:relative;height:380px}
+@media (max-width:600px){.chartbox{height:300px}}
+.thr{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px}
+.thr .kpi .v{font-size:18px}
+.thr .btn{margin-top:8px;font-size:12px;padding:4px 10px}
+.tablewrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:13px;font-variant-numeric:tabular-nums}
+th{font-weight:500;text-align:left;color:var(--ink-3);font-size:12px;padding:6px 8px;border-bottom:1px solid var(--line);white-space:nowrap}
+td{padding:7px 8px;border-bottom:1px solid var(--line);white-space:nowrap}
+td.num,th.num{text-align:right;font-family:var(--mono)}
+td .acts{display:flex;gap:6px}
+td .acts .btn{padding:2px 8px;font-size:12px}
+.saverow{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+.saverow input{flex:1;min-width:160px}
+.note{font-size:12px;color:var(--ink-3);margin:8px 0 0}
+.empty{font-size:13px;color:var(--ink-3);padding:8px 0}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+<header>
+  <h1>Portfólió kivét-tervező</h1>
+  <p>Részvény- és állampapír-portfólió, havi költéssel. A Monte Carlo nézet ezer véletlen piaci pályát futtat, és megmutatja, mekkora eséllyel tart ki a pénz.</p>
+</header>
+
+<div class="layout">
+<aside class="panel" aria-label="Beállítások">
+  <div class="group">
+    <h2>Portfólió</h2>
+    <div id="g-port"></div>
+    <div class="ratio" aria-hidden="true"><div id="rbS" style="background:var(--stock)"></div><div id="rbB" style="background:var(--bond);flex:1"></div></div>
+    <div class="ratio-l"><span>Részvény <b id="rS"></b></span><span>Súlyozott hozam <b id="rW"></b></span><span>Állampapír <b id="rB"></b></span></div>
+    <div class="ctl" style="margin-top:12px"><label for="mix_n">Részvény arány <span class="unit">% · a teljes vagyon nem változik</span></label><input type="number" id="mix_n" min="0" max="100" step="1" value="60"><input type="range" id="mix" min="0" max="100" step="1" value="60" aria-label="Részvény arány"></div>
+  </div>
+  <div class="group">
+    <h2>Költés</h2>
+    <div id="g-spend"></div>
+    <label class="toggle"><input type="checkbox" id="flex"> Rugalmas költés</label>
+    <div class="hint">Ha az előző év hozama negatív, a következő évben ennyivel kevesebbet költesz.</div>
+    <div id="g-flex"></div>
+    <label for="src" style="font-size:13px;color:var(--ink-2)">Költés forrása</label>
+    <select id="src"><option value="p">Arányosan mindkettőből</option><option value="b">Előbb állampapírból</option><option value="s">Előbb részvényből</option></select>
+  </div>
+  <div class="group">
+    <h2>Piac</h2>
+    <div id="g-mkt"></div>
+    <label class="toggle"><input type="checkbox" id="reb" checked> Éves újrasúlyozás</label>
+    <div class="hint">Minden év végén visszaállítja a kezdő részvény–állampapír arányt.</div>
+  </div>
+</aside>
+
+<main class="results">
+  <div class="kpis" id="kpis"></div>
+
+  <section class="panel">
+    <div class="charthead">
+      <div class="seg" role="group" aria-label="Nézet">
+        <button id="m-det" aria-pressed="false">Egyenletes hozam</button>
+        <button id="m-mc" aria-pressed="true">Monte Carlo</button>
+      </div>
+      <label class="toggle" style="margin:0"><input type="checkbox" id="real"> Mai forintban (reálérték)</label>
+    </div>
+    <div class="legend" id="legend"></div>
+    <div class="chartbox"><canvas id="chart" role="img" aria-label="A portfólió értéke évenként"></canvas></div>
+    <p class="note" id="chartnote"></p>
+  </section>
+
+  <section class="panel">
+    <h2>Havi költési határok</h2>
+    <div class="thr" id="thr"></div>
+  </section>
+
+  <section class="panel">
+    <h2>Forgatókönyvek</h2>
+    <div class="saverow">
+      <input type="text" id="sname" placeholder="Például: Korai nyugdíj, 400 ezer/hó" aria-label="Forgatókönyv neve">
+      <button class="btn primary" id="save">Jelenlegi mentése</button>
+    </div>
+    <div class="tablewrap"><table id="stable"></table></div>
+    <p class="note">A mentett forgatókönyvek ebben a böngészőben maradnak meg. A bekapcsoltak vonalként jelennek meg a grafikonon.</p>
+  </section>
+</main>
+</div>
+
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script>
+const $=id=>document.getElementById(id);
+const CTL={
+ 'g-port':[['s','Részvények','millió Ft',0,1000,1,30],['b','Állampapírok','millió Ft',0,1000,1,20]],
+ 'g-spend':[['w','Havi költés','ezer Ft',0,5000,10,300],['inf','Infláció','%/év',0,10,0.5,4],['y','Időtáv','év',5,50,1,30]],
+ 'g-flex':[['cut','Csökkentés rossz év után','%',0,50,5,10]],
+ 'g-mkt':[['sr','Részvény hozam','%/év',0,15,0.5,7],['sv','Részvény ingadozás','% szórás',0,40,1,17],['br','Állampapír hozam','%/év',0,10,0.5,5],['bv','Állampapír ingadozás','% szórás',0,20,1,4]]
+};
+Object.entries(CTL).forEach(([g,list])=>{
+ $(g).innerHTML=list.map(([k,l,u,mn,mx,st,v])=>`<div class="ctl"><label for="${k}_n">${l} <span class="unit">${u}</span></label><input type="number" id="${k}_n" min="${mn}" max="${mx}" step="${st}" value="${v}"><input type="range" id="${k}" min="${mn}" max="${mx}" step="${st}" value="${v}" aria-label="${l}"></div>`).join('');
+ list.forEach(([k])=>{
+  $(k).addEventListener('input',()=>{$(k+'_n').value=$(k).value;sched();});
+  $(k+'_n').addEventListener('input',()=>{const v=parseFloat($(k+'_n').value);if(isNaN(v))return;if(v>+$(k).max){$(k).max=v;}$(k).value=Math.max(+$(k).min,v);sched();});
+ });
+});
+const KEYS=Object.values(CTL).flat().map(c=>c[0]);
+const num=k=>{const v=parseFloat($(k+'_n').value);return isNaN(v)?+$(k).value:Math.max(0,v);};
+function setVal(k,v){if(v>+$(k).max)$(k).max=v;$(k).value=v;$(k+'_n').value=v;}
+function setMix(pc){pc=Math.min(100,Math.max(0,pc));const tot=num('s')+num('b');const s=Math.round(tot*pc/100*10)/10;setVal('s',s);setVal('b',Math.round((tot-s)*10)/10);sched();}
+$('mix').addEventListener('input',()=>{$('mix_n').value=$('mix').value;setMix(+$('mix').value);});
+$('mix_n').addEventListener('input',()=>{const v=parseFloat($('mix_n').value);if(isNaN(v))return;$('mix').value=v;setMix(v);});
+['flex','reb','src','real'].forEach(id=>$(id).addEventListener('input',sched));
+let MODE='mc';
+$('m-det').onclick=()=>{MODE='det';sched();};$('m-mc').onclick=()=>{MODE='mc';sched();};
+
+function readP(){const p={};KEYS.forEach(k=>p[k]=num(k));p.y=Math.max(1,Math.round(p.y));p.flex=$('flex').checked;p.reb=$('reb').checked;p.src=$('src').value;return p;}
+function applyP(p){KEYS.forEach(k=>{if(p[k]!=null)setVal(k,p[k]);});$('flex').checked=!!p.flex;$('reb').checked=!!p.reb;$('src').value=p.src||'p';}
+
+function rng(seed){return function(){seed|=0;seed=seed+0x6D2B79F5|0;let t=Math.imul(seed^seed>>>15,1|seed);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};}
+function genPaths(p,n,seed){
+ const r=rng(seed),g=()=>{let u=0,v=0;while(!u)u=r();v=r();return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v);};
+ const out=[];for(let i=0;i<n;i++){const S=new Float64Array(p.y),B=new Float64Array(p.y);
+  for(let t=0;t<p.y;t++){S[t]=Math.max(-0.9,p.sr/100+p.sv/100*g());B[t]=Math.max(-0.9,p.br/100+p.bv/100*g());}out.push({S,B});}
+ return out;
+}
+function sim(p,W,path,rec){
+ const S0=p.s,B0=p.b,tot0=S0+B0,tgt=tot0>0?S0/tot0:0,inf=p.inf/100,mi=Math.pow(1+inf,1/12)-1;
+ let s=S0,b=B0,base=W/1000,cut=false,out=null;
+ const R=rec?{s:[S0],b:[B0],sp:[base*12]}:null;
+ for(let t=0;t<p.y;t++){
+  const rs=path?path.S[t]:p.sr/100,rb=path?path.B[t]:p.br/100;
+  const ms=Math.pow(1+rs,1/12)-1,mb=Math.pow(1+rb,1/12)-1;
+  const s0=s,b0=b;let spent=0;
+  for(let m=0;m<12;m++){
+   s*=1+ms;b*=1+mb;let need=base*(cut?1-p.cut/100:1);spent+=need;
+   if(p.src==='p'){const T=s+b;if(T>0){const a=Math.min(need,T);s-=a*s/T;b-=a*b/T;}}
+   else if(p.src==='b'){const a=Math.min(need,b);b-=a;need-=a;s-=Math.min(need,s);}
+   else{const a=Math.min(need,s);s-=a;need-=a;b-=Math.min(need,b);}
+   if(s<1e-9)s=0;if(b<1e-9)b=0;
+   if(out===null&&s+b<=1e-9)out=t*12+m+1;
+   base*=1+mi;
+  }
+  const yr=(s0+b0)>0?(s0*rs+b0*rb)/(s0+b0):0;
+  cut=p.flex&&yr<0;
+  if(p.reb&&s+b>0){const T=s+b;s=T*tgt;b=T-s;}
+  if(rec){R.s.push(s);R.b.push(b);R.sp.push(spent);}
+ }
+ return{out,end:s+b,R};
+}
+function solve(test,hi){let lo=0;for(let i=0;i<40;i++){const m=(lo+hi)/2;if(test(m))lo=m;else hi=m;}return lo;}
+function pct(arr,q){const a=Float64Array.from(arr).sort();const i=(a.length-1)*q,lo=Math.floor(i),hi=Math.ceil(i);return a[lo]+(a[hi]-a[lo])*(i-lo);}
+function mcRun(p,W,paths){
+ const Y=p.y,cols=Array.from({length:Y+1},()=>[]);let ok=0;
+ for(const path of paths){const r=sim(p,W,path,true);if(r.out===null)ok++;for(let t=0;t<=Y;t++)cols[t].push(r.R.s[t]+r.R.b[t]);}
+ return{succ:ok/paths.length,p10:cols.map(c=>pct(c,.1)),p50:cols.map(c=>pct(c,.5)),p90:cols.map(c=>pct(c,.9))};
+}
+function mcSucc(p,W,paths){let ok=0;for(const pa of paths)if(sim(p,W,pa,false).out===null)ok++;return ok/paths.length;}
+
+const fmtM=v=>{const a=Math.abs(v);const s=a>=1000?(a/1000).toLocaleString('hu-HU',{maximumFractionDigits:2})+' Mrd':a.toLocaleString('hu-HU',{maximumFractionDigits:a<10?1:0})+' M';return(v<0?'-':'')+s;};
+const fmtE=v=>Math.round(v*1000).toLocaleString('hu-HU')+' e Ft/hó';
+const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const SC=['#8e5bd6','#c2417a','#b58a00','#4a7f8c'];
+
+let scen=[];try{scen=JSON.parse(localStorage.getItem('pf-scen-v1')||'[]');}catch(e){scen=[];}
+function persist(){try{localStorage.setItem('pf-scen-v1',JSON.stringify(scen));}catch(e){}}
+
+let chart,T=[0,0,0,0],pend=false;
+function sched(){if(pend)return;pend=true;requestAnimationFrame(()=>{pend=false;run();});}
+
+function run(){
+ const p=readP(),W=p.w,tot=p.s+p.b,real=$('real').checked,mc=MODE==='mc';
+ $('m-det').setAttribute('aria-pressed',!mc);$('m-mc').setAttribute('aria-pressed',mc);
+ const defl=t=>real?Math.pow(1+p.inf/100,t):1;
+ const ps=tot>0?p.s/tot:0;
+ if(document.activeElement!==$('mix')&&document.activeElement!==$('mix_n')){$('mix').value=Math.round(ps*100);$('mix_n').value=Math.round(ps*100);}
+ $('rbS').style.width=ps*100+'%';$('rbS').hidden=ps===0;$('rbB').hidden=ps===1;
+ $('rS').textContent=Math.round(ps*100)+'%';$('rB').textContent=Math.round((1-ps)*100)+'%';
+ $('rW').textContent=tot>0?((ps*p.sr+(1-ps)*p.br)).toLocaleString('hu-HU',{maximumFractionDigits:2})+'%':'–';
+
+ const det=sim(p,W,null,true);
+ const paths=genPaths(p,1000,12345),solvePaths=paths.slice(0,400);
+ const M=mcRun(p,W,paths);
+ const L=Array.from({length:p.y+1},(_,i)=>String(i));
+ const d=(arr)=>arr.map((v,i)=>+(v/defl(i)).toFixed(3));
+
+ const endDet=det.end/defl(p.y),endMed=M.p50[p.y]/defl(p.y);
+ const sp=M.succ*100,cls=sp>=90?'good':sp>=70?'mid':'bad';
+ $('kpis').innerHTML=[
+  ['Kezdő vagyon',fmtM(tot)+' Ft',''],
+  ['Siker esélye',Math.round(sp)+'%',`<span class="pill ${cls}">${sp>=90?'Biztonságos':sp>=70?'Közepes kockázat':'Magas kockázat'}</span> ${p.y} év alatt`],
+  [mc?'Medián vagyon a végén':'Vagyon a végén',fmtM(mc?endMed:endDet)+' Ft',real?'mai forintban':'névértéken'],
+  ['Egyenletes hozamnál elfogy',det.out?Math.floor(det.out/12)+' év '+det.out%12+' hó':'Nem fogy el',mc?'Rossz pályán (10%): '+fmtM(M.p10[p.y]/defl(p.y))+' Ft':'']
+ ].map(([l,v,s])=>`<div class="kpi"><div class="l">${l}</div><div class="v">${v}</div><div class="s">${s}</div></div>`).join('');
+
+ const hi=Math.max(tot,0.01)*1000/12;
+ T[0]=tot>0?solve(x=>{const q={...p,y:1};return sim(q,x,null,false).end>=tot;},hi*12):0;
+ T[1]=tot>0?solve(x=>sim(p,x,null,false).end>=tot*Math.pow(1+p.inf/100,p.y),hi*12):0;
+ T[2]=tot>0?solve(x=>sim(p,x,null,false).out===null,hi*12):0;
+ T[3]=tot>0?solve(x=>mcSucc(p,x,solvePaths)>=0.9,hi*12):0;
+ const TL=[['Fordulópont','Efölött a vagyon már az első évben csökken.'],['Reálérték megőrzése','A vagyon az időtáv végén is ugyanannyit ér mai pénzben.'],['Maximum egyenletes hozamnál','Pont az időtáv végéig tart ki.'],['90%-os biztonság','A véletlen pályák 90%-ában kitart.']];
+ $('thr').innerHTML=T.map((t,i)=>{const diff=W-t*1;const over=diff>5;return `<div class="kpi"><div class="l">${TL[i][0]}</div><div class="v" style="color:${over?'var(--bad)':'var(--good)'}">${Math.round(t).toLocaleString('hu-HU')} e Ft/hó</div><div class="s">${TL[i][1]}</div><div class="s">${Math.abs(diff)<=5?'Pont ennyit költesz.':(over?'Most '+Math.round(diff).toLocaleString('hu-HU')+' e Ft-tal fölötte vagy.':'Most '+Math.round(-diff).toLocaleString('hu-HU')+' e Ft-tal alatta vagy.')}</div><button class="btn" data-t="${i}">Beállítás ennyire</button></div>`;}).join('');
+ $('thr').querySelectorAll('button').forEach(b=>b.onclick=()=>{setVal('w',Math.round(T[+b.dataset.t]/10)*10);sched();});
+
+ const cS=css('--stock'),cB=css('--bond'),cSp=css('--spend'),cA=css('--accent'),cG=css('--grid'),cT=css('--ink-3');
+ const ds=[],leg=[];
+ if(mc){
+  ds.push({label:'Legjobb 10%',data:d(M.p90),borderColor:'transparent',backgroundColor:cA+'26',pointRadius:0,fill:false});
+  ds.push({label:'Legrosszabb 10%',data:d(M.p10),borderColor:cA+'66',borderWidth:1,backgroundColor:cA+'26',pointRadius:0,fill:'-1'});
+  ds.push({label:'Medián',data:d(M.p50),borderColor:cA,borderWidth:2.5,pointRadius:0,fill:false});
+  ds.push({label:'Egyenletes hozam',data:d(det.R.s.map((v,i)=>v+det.R.b[i])),borderColor:css('--ink-2'),borderDash:[3,3],borderWidth:1.5,pointRadius:0,fill:false});
+  leg.push(`<span><i class="sw" style="background:${cA}33;border:1px solid ${cA}66"></i>10–90% sáv</span>`,`<span><i class="sw" style="background:${cA}"></i>Medián</span>`,`<span><i class="sw line" style="border-color:${css('--ink-2')}"></i>Egyenletes hozam</span>`);
+ }else{
+  const tots=det.R.s.map((v,i)=>v+det.R.b[i]);
+  ds.push({label:'Állampapírok',data:d(det.R.b),borderColor:cB,backgroundColor:cB+'40',borderWidth:2,pointRadius:0,fill:'origin'});
+  ds.push({label:'Részvények',data:d(tots),raw:d(det.R.s),borderColor:cS,backgroundColor:cS+'40',borderWidth:2,pointRadius:0,fill:'-1'});
+  leg.push(`<span><i class="sw" style="background:${cS}"></i>Részvények</span>`,`<span><i class="sw" style="background:${cB}"></i>Állampapírok</span>`);
+ }
+ ds.push({label:'Éves költés',data:d(det.R.sp),borderColor:cSp,borderDash:[6,4],borderWidth:2,pointRadius:0,fill:false});
+ leg.push(`<span><i class="sw line" style="border-color:${cSp}"></i>Éves költés</span>`);
+
+ const rows=[];
+ scen.forEach((sc,i)=>{
+  const q={...sc.p,y:p.y};const col=SC[i%SC.length];
+  let line,succ;
+  const pp=genPaths(q,400,12345);const m=mcRun(q,q.w,pp);succ=m.succ;
+  if(mc)line=m.p50;else{const r=sim(q,q.w,null,true);line=r.R.s.map((v,j)=>v+r.R.b[j]);}
+  if(sc.on){ds.push({label:sc.name,data:d(line),borderColor:col,borderWidth:2,pointRadius:0,fill:false});leg.push(`<span><i class="sw" style="background:${col}"></i>${esc(sc.name)}</span>`);}
+  rows.push({sc,i,col,succ,end:line[p.y]/defl(p.y)});
+ });
+ $('legend').innerHTML=leg.join('');
+ $('chartnote').textContent=mc?'Az évenkénti hozamok véletlenszerűek a megadott átlaggal és szórással. A sáv a pályák középső 80%-át fedi le.':'Minden évben pontosan a megadott hozammal számol. A valóságban a hozamok ingadoznak.';
+
+ const st=$('stable');
+ if(!scen.length){st.innerHTML='<tr><td class="empty">Még nincs mentett forgatókönyv. Állítsd be a paramétereket, adj nevet, és mentsd el, hogy összehasonlíthasd őket.</td></tr>';}
+ else{
+  st.innerHTML=`<tr><th></th><th>Név</th><th class="num">Vagyon</th><th class="num">Részvény</th><th class="num">Havi költés</th><th class="num">Siker</th><th class="num">${mc?'Medián':'Vagyon'} a végén</th><th></th></tr>`+
+  `<tr><td></td><td><b>Jelenlegi</b></td><td class="num">${fmtM(tot)}</td><td class="num">${Math.round(ps*100)}%</td><td class="num">${Math.round(W).toLocaleString('hu-HU')} e</td><td class="num">${Math.round(sp)}%</td><td class="num">${fmtM(mc?endMed:endDet)}</td><td></td></tr>`+
+  rows.map(r=>{const t=r.sc.p.s+r.sc.p.b;return `<tr><td><input type="checkbox" data-on="${r.i}" ${r.sc.on?'checked':''} aria-label="Megjelenítés a grafikonon" style="accent-color:${r.col}"></td><td><i class="sw" style="background:${r.col};margin-right:6px"></i>${esc(r.sc.name)}</td><td class="num">${fmtM(t)}</td><td class="num">${t>0?Math.round(r.sc.p.s/t*100):0}%</td><td class="num">${Math.round(r.sc.p.w).toLocaleString('hu-HU')} e</td><td class="num">${Math.round(r.succ*100)}%</td><td class="num">${fmtM(r.end)}</td><td><div class="acts"><button class="btn" data-load="${r.i}">Betöltés</button><button class="btn" data-del="${r.i}">Törlés</button></div></td></tr>`;}).join('');
+  st.querySelectorAll('[data-on]').forEach(c=>c.onchange=()=>{scen[+c.dataset.on].on=c.checked;persist();sched();});
+  st.querySelectorAll('[data-load]').forEach(b=>b.onclick=()=>{applyP(scen[+b.dataset.load].p);sched();});
+  st.querySelectorAll('[data-del]').forEach(b=>b.onclick=()=>{scen.splice(+b.dataset.del,1);persist();sched();});
+ }
+
+ const opts={responsive:true,maintainAspectRatio:false,animation:false,interaction:{mode:'index',intersect:false},
+  plugins:{legend:{display:false},tooltip:{callbacks:{title:i=>i[0].label+'. év',label:c=>{const v=c.dataset.raw?c.dataset.raw[c.dataIndex]:c.parsed.y;return c.dataset.label+': '+fmtM(v)+' Ft';}}}},
+  scales:{x:{grid:{display:false},ticks:{color:cT,maxTicksLimit:11},title:{display:true,text:'Év',color:cT}},
+   y:{beginAtZero:true,grid:{color:cG},ticks:{color:cT,callback:v=>fmtM(v)},title:{display:true,text:real?'Millió Ft (mai érték)':'Millió Ft',color:cT}}}};
+ if(chart)chart.destroy();
+ chart=new Chart($('chart'),{type:'line',data:{labels:L,datasets:ds},options:opts});
+}
+function esc(s){return String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
+$('save').onclick=()=>{
+ if(scen.length>=8){$('sname').value='';$('sname').placeholder='Legfeljebb 8 forgatókönyv menthető. Törölj egyet.';return;}
+ const name=$('sname').value.trim()||('Forgatókönyv '+(scen.length+1));
+ scen.push({name,p:readP(),on:true});$('sname').value='';persist();sched();
+};
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change',sched);
+new MutationObserver(sched).observe(document.documentElement,{attributes:true,attributeFilter:['data-theme']});
+run();
+</script>
+
+</body>
+</html>

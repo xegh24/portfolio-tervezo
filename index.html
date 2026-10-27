@@ -10,15 +10,15 @@
 /* Layout: ledger-like tool. Controls panel on the left, results on the right; stacks below 900px. */
 :root{
   --bg:#f6f7f5;--panel:#ffffff;--ink:#16201c;--ink-2:#4e5a55;--ink-3:#85908b;--line:#dfe3df;--line-2:#c9cfca;
-  --accent:#1f6f5c;--accent-bg:#e3f1ec;--stock:#2a6fd1;--bond:#17936c;--spend:#d4602a;--bad:#b83a32;--bad-bg:#f8e5e3;--good:#1f7a3a;--good-bg:#e4f2e7;
+  --accent:#1f6f5c;--accent-bg:#e3f1ec;--stock:#1f5fd6;--bond:#e08a00;--mc:#0e8a7a;--sc1:#c2337a;--sc2:#6d44c9;--sc3:#5f8a00;--sc4:#47596b;--spend:#d4602a;--bad:#b83a32;--bad-bg:#f8e5e3;--good:#1f7a3a;--good-bg:#e4f2e7;
   --grid:#e7eae7;--sans:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;--mono:"IBM Plex Mono",ui-monospace,Menlo,monospace;
 }
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
   --bg:#111614;--panel:#181f1c;--ink:#e8eeea;--ink-2:#aab6b0;--ink-3:#7a8781;--line:#27302c;--line-2:#36413c;
-  --accent:#5ec3a4;--accent-bg:#183229;--stock:#5b9bf0;--bond:#3fc095;--spend:#ef8a55;--bad:#ef7f76;--bad-bg:#3a1f1d;--good:#6fcf8a;--good-bg:#18301f;--grid:#232b28;color-scheme:dark}}
+  --accent:#5ec3a4;--accent-bg:#183229;--stock:#5b9bf0;--bond:#f2a933;--mc:#3cc7b2;--sc1:#ea6aa6;--sc2:#a68cf2;--sc3:#9fcc3a;--sc4:#9aaabb;--spend:#ef8a55;--bad:#ef7f76;--bad-bg:#3a1f1d;--good:#6fcf8a;--good-bg:#18301f;--grid:#232b28;color-scheme:dark}}
 :root[data-theme="dark"]{
   --bg:#111614;--panel:#181f1c;--ink:#e8eeea;--ink-2:#aab6b0;--ink-3:#7a8781;--line:#27302c;--line-2:#36413c;
-  --accent:#5ec3a4;--accent-bg:#183229;--stock:#5b9bf0;--bond:#3fc095;--spend:#ef8a55;--bad:#ef7f76;--bad-bg:#3a1f1d;--good:#6fcf8a;--good-bg:#18301f;--grid:#232b28;color-scheme:dark}
+  --accent:#5ec3a4;--accent-bg:#183229;--stock:#5b9bf0;--bond:#f2a933;--mc:#3cc7b2;--sc1:#ea6aa6;--sc2:#a68cf2;--sc3:#9fcc3a;--sc4:#9aaabb;--spend:#ef8a55;--bad:#ef7f76;--bad-bg:#3a1f1d;--good:#6fcf8a;--good-bg:#18301f;--grid:#232b28;color-scheme:dark}
 *{box-sizing:border-box}
 body{background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:15px;line-height:1.5;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:20px 40px}
 .wrap{max-width:1240px;margin:0 auto;display:flex;flex-direction:column;gap:18px}
@@ -221,7 +221,7 @@ function mcSucc(p,W,paths){let ok=0;for(const pa of paths)if(sim(p,W,pa,false).o
 const fmtM=v=>{const a=Math.abs(v);const s=a>=1000?(a/1000).toLocaleString('hu-HU',{maximumFractionDigits:2})+' Mrd':a.toLocaleString('hu-HU',{maximumFractionDigits:a<10?1:0})+' M';return(v<0?'-':'')+s;};
 const fmtE=v=>Math.round(v*1000).toLocaleString('hu-HU')+' e Ft/hó';
 const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
-const SC=['#8e5bd6','#c2417a','#b58a00','#4a7f8c'];
+const SC=['--sc1','--sc2','--sc3','--sc4'];
 
 let scen=[];try{scen=JSON.parse(localStorage.getItem('pf-scen-v1')||'[]');}catch(e){scen=[];}
 function persist(){try{localStorage.setItem('pf-scen-v1',JSON.stringify(scen));}catch(e){}}
@@ -265,18 +265,18 @@ function run(){
  $('thr').innerHTML=T.map((t,i)=>{const diff=W-t*1;const over=diff>5;return `<div class="kpi"><div class="l">${TL[i][0]}</div><div class="v" style="color:${over?'var(--bad)':'var(--good)'}">${Math.round(t).toLocaleString('hu-HU')} e Ft/hó</div><div class="s">${TL[i][1]}</div><div class="s">${Math.abs(diff)<=5?'Pont ennyit költesz.':(over?'Most '+Math.round(diff).toLocaleString('hu-HU')+' e Ft-tal fölötte vagy.':'Most '+Math.round(-diff).toLocaleString('hu-HU')+' e Ft-tal alatta vagy.')}</div><button class="btn" data-t="${i}">Beállítás ennyire</button></div>`;}).join('');
  $('thr').querySelectorAll('button').forEach(b=>b.onclick=()=>{setVal('w',Math.round(T[+b.dataset.t]/10)*10);sched();});
 
- const cS=css('--stock'),cB=css('--bond'),cSp=css('--spend'),cA=css('--accent'),cG=css('--grid'),cT=css('--ink-3');
+ const cS=css('--stock'),cB=css('--bond'),cSp=css('--spend'),cA=css('--mc'),cG=css('--grid'),cT=css('--ink-3');
  const ds=[],leg=[];
  if(mc){
-  ds.push({label:'Legjobb 10%',data:d(M.p90),borderColor:cA+'55',borderWidth:1,backgroundColor:cA+'22',pointRadius:0,pointHoverRadius:0,fill:false,endLabel:true,faint:true});
-  ds.push({label:'Legrosszabb 10%',data:d(M.p10),borderColor:cA+'55',borderWidth:1,backgroundColor:cA+'22',pointRadius:0,pointHoverRadius:0,fill:'-1',endLabel:true,faint:true});
+  ds.push({label:'Legjobb 10%',data:d(M.p90),borderColor:cA+'55',borderWidth:1,backgroundColor:cA+'33',pointRadius:0,pointHoverRadius:0,fill:false,endLabel:true,faint:true});
+  ds.push({label:'Legrosszabb 10%',data:d(M.p10),borderColor:cA+'55',borderWidth:1,backgroundColor:cA+'33',pointRadius:0,pointHoverRadius:0,fill:'-1',endLabel:true,faint:true});
   ds.push({label:'Medián',data:d(M.p50),borderColor:cA,borderWidth:3,pointRadius:0,pointHoverRadius:4,fill:false,endLabel:true});
-  ds.push({label:'Egyenletes hozam',data:d(det.R.s.map((v,i)=>v+det.R.b[i])),borderColor:css('--ink-2'),borderDash:[3,3],borderWidth:1.5,pointRadius:0,fill:false});
-  leg.push(`<span><i class="sw" style="background:${cA}33;border:1px solid ${cA}66"></i>10–90% sáv</span>`,`<span><i class="sw" style="background:${cA}"></i>Medián</span>`,`<span><i class="sw line" style="border-color:${css('--ink-2')}"></i>Egyenletes hozam</span>`);
+  ds.push({label:'Egyenletes hozam',data:d(det.R.s.map((v,i)=>v+det.R.b[i])),borderColor:css('--ink'),borderDash:[6,4],borderWidth:1.5,pointRadius:0,fill:false});
+  leg.push(`<span><i class="sw" style="background:${cA}33;border:1px solid ${cA}66"></i>10–90% sáv</span>`,`<span><i class="sw" style="background:${cA}"></i>Medián</span>`,`<span><i class="sw line" style="border-color:${css('--ink')}"></i>Egyenletes hozam</span>`);
  }else{
   const tots=det.R.s.map((v,i)=>v+det.R.b[i]);
-  ds.push({label:'Állampapírok',data:d(det.R.b),borderColor:cB,backgroundColor:cB+'40',borderWidth:2,pointRadius:0,pointHoverRadius:3,fill:'origin'});
-  ds.push({label:'Részvények',data:d(tots),raw:d(det.R.s),borderColor:cS,backgroundColor:cS+'40',borderWidth:2,pointRadius:0,pointHoverRadius:3,fill:'-1'});
+  ds.push({label:'Állampapírok',data:d(det.R.b),borderColor:cB,backgroundColor:cB+'59',borderWidth:2,pointRadius:0,pointHoverRadius:3,fill:'origin'});
+  ds.push({label:'Részvények',data:d(tots),raw:d(det.R.s),borderColor:cS,backgroundColor:cS+'59',borderWidth:2,pointRadius:0,pointHoverRadius:3,fill:'-1'});
   ds.push({label:'Összesen',data:d(tots),borderColor:css('--ink'),borderWidth:2,pointRadius:0,pointHoverRadius:4,fill:false,endLabel:true});
   leg.push(`<span><i class="sw" style="background:${cS}"></i>Részvények</span>`,`<span><i class="sw" style="background:${cB}"></i>Állampapírok</span>`);
  }
@@ -288,7 +288,7 @@ function run(){
 
  const rows=[];
  scen.forEach((sc,i)=>{
-  const q={...sc.p,y:p.y};const col=SC[i%SC.length];
+  const q={...sc.p,y:p.y};const col=css(SC[i%SC.length]);
   let line,succ;
   const pp=genPaths(q,400,12345);const m=mcRun(q,q.w,pp);succ=m.succ;
   if(mc)line=m.p50;else{const r=sim(q,q.w,null,true);line=r.R.s.map((v,j)=>v+r.R.b[j]);}

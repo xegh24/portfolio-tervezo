@@ -61,8 +61,8 @@ select{width:100%}
 .legend span{display:inline-flex;align-items:center;gap:6px}
 .sw{width:12px;height:10px;border-radius:2px;display:inline-block}
 .sw.line{height:0;border-top:2px dashed}
-.chartbox{position:relative;height:380px}
-@media (max-width:600px){.chartbox{height:300px}}
+.chartbox{position:relative;height:440px}
+@media (max-width:600px){.chartbox{height:340px}}
 .thr{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px}
 .thr .kpi .v{font-size:18px}
 .thr .btn{margin-top:8px;font-size:12px;padding:4px 10px}
@@ -268,19 +268,23 @@ function run(){
  const cS=css('--stock'),cB=css('--bond'),cSp=css('--spend'),cA=css('--accent'),cG=css('--grid'),cT=css('--ink-3');
  const ds=[],leg=[];
  if(mc){
-  ds.push({label:'Legjobb 10%',data:d(M.p90),borderColor:'transparent',backgroundColor:cA+'26',pointRadius:0,fill:false});
-  ds.push({label:'Legrosszabb 10%',data:d(M.p10),borderColor:cA+'66',borderWidth:1,backgroundColor:cA+'26',pointRadius:0,fill:'-1'});
-  ds.push({label:'Medián',data:d(M.p50),borderColor:cA,borderWidth:2.5,pointRadius:0,fill:false});
+  ds.push({label:'Legjobb 10%',data:d(M.p90),borderColor:cA+'55',borderWidth:1,backgroundColor:cA+'22',pointRadius:0,pointHoverRadius:0,fill:false,endLabel:true,faint:true});
+  ds.push({label:'Legrosszabb 10%',data:d(M.p10),borderColor:cA+'55',borderWidth:1,backgroundColor:cA+'22',pointRadius:0,pointHoverRadius:0,fill:'-1',endLabel:true,faint:true});
+  ds.push({label:'Medián',data:d(M.p50),borderColor:cA,borderWidth:3,pointRadius:0,pointHoverRadius:4,fill:false,endLabel:true});
   ds.push({label:'Egyenletes hozam',data:d(det.R.s.map((v,i)=>v+det.R.b[i])),borderColor:css('--ink-2'),borderDash:[3,3],borderWidth:1.5,pointRadius:0,fill:false});
   leg.push(`<span><i class="sw" style="background:${cA}33;border:1px solid ${cA}66"></i>10–90% sáv</span>`,`<span><i class="sw" style="background:${cA}"></i>Medián</span>`,`<span><i class="sw line" style="border-color:${css('--ink-2')}"></i>Egyenletes hozam</span>`);
  }else{
   const tots=det.R.s.map((v,i)=>v+det.R.b[i]);
-  ds.push({label:'Állampapírok',data:d(det.R.b),borderColor:cB,backgroundColor:cB+'40',borderWidth:2,pointRadius:0,fill:'origin'});
-  ds.push({label:'Részvények',data:d(tots),raw:d(det.R.s),borderColor:cS,backgroundColor:cS+'40',borderWidth:2,pointRadius:0,fill:'-1'});
+  ds.push({label:'Állampapírok',data:d(det.R.b),borderColor:cB,backgroundColor:cB+'40',borderWidth:2,pointRadius:0,pointHoverRadius:3,fill:'origin'});
+  ds.push({label:'Részvények',data:d(tots),raw:d(det.R.s),borderColor:cS,backgroundColor:cS+'40',borderWidth:2,pointRadius:0,pointHoverRadius:3,fill:'-1'});
+  ds.push({label:'Összesen',data:d(tots),borderColor:css('--ink'),borderWidth:2,pointRadius:0,pointHoverRadius:4,fill:false,endLabel:true});
   leg.push(`<span><i class="sw" style="background:${cS}"></i>Részvények</span>`,`<span><i class="sw" style="background:${cB}"></i>Állampapírok</span>`);
  }
- ds.push({label:'Éves költés',data:d(det.R.sp),borderColor:cSp,borderDash:[6,4],borderWidth:2,pointRadius:0,fill:false});
- leg.push(`<span><i class="sw line" style="border-color:${cSp}"></i>Éves költés</span>`);
+ ds.push({label:'Kezdő vagyon',data:L.map(()=>+tot.toFixed(3)),borderColor:css('--ink-3'),borderDash:[2,4],borderWidth:1,pointRadius:0,pointHoverRadius:0,fill:false,ref:true});
+ leg.push(`<span><i class="sw line" style="border-color:${css('--ink-3')}"></i>Kezdő vagyon</span>`);
+ const spendArr=d(det.R.sp);
+ const mainLine=mc?d(M.p50):d(det.R.s.map((v,i)=>v+det.R.b[i]));
+ let zeroIdx=mainLine.findIndex((v,i)=>i>0&&v<=0.0005);
 
  const rows=[];
  scen.forEach((sc,i)=>{
@@ -288,11 +292,11 @@ function run(){
   let line,succ;
   const pp=genPaths(q,400,12345);const m=mcRun(q,q.w,pp);succ=m.succ;
   if(mc)line=m.p50;else{const r=sim(q,q.w,null,true);line=r.R.s.map((v,j)=>v+r.R.b[j]);}
-  if(sc.on){ds.push({label:sc.name,data:d(line),borderColor:col,borderWidth:2,pointRadius:0,fill:false});leg.push(`<span><i class="sw" style="background:${col}"></i>${esc(sc.name)}</span>`);}
+  if(sc.on){ds.push({label:sc.name,data:d(line),borderColor:col,borderWidth:1.5,borderDash:[8,3],pointRadius:0,pointHoverRadius:3,fill:false,endLabel:true});leg.push(`<span><i class="sw" style="background:${col}"></i>${esc(sc.name)}</span>`);}
   rows.push({sc,i,col,succ,end:line[p.y]/defl(p.y)});
  });
  $('legend').innerHTML=leg.join('');
- $('chartnote').textContent=mc?'Az évenkénti hozamok véletlenszerűek a megadott átlaggal és szórással. A sáv a pályák középső 80%-át fedi le.':'Minden évben pontosan a megadott hozammal számol. A valóságban a hozamok ingadoznak.';
+ $('chartnote').textContent=mc?'Az évenkénti hozamok véletlenszerűek a megadott átlaggal és szórással. A sáv a pályák középső 80%-át fedi le, a vonalvégi számok az időtáv végi értékek. Az éves költés a pontra mutatva látszik.':'Minden évben pontosan a megadott hozammal számol. A valóságban a hozamok ingadoznak.';
 
  const st=$('stable');
  if(!scen.length){st.innerHTML='<tr><td class="empty">Még nincs mentett forgatókönyv. Állítsd be a paramétereket, adj nevet, és mentsd el, hogy összehasonlíthasd őket.</td></tr>';}
@@ -305,12 +309,25 @@ function run(){
   st.querySelectorAll('[data-del]').forEach(b=>b.onclick=()=>{scen.splice(+b.dataset.del,1);persist();sched();});
  }
 
- const opts={responsive:true,maintainAspectRatio:false,animation:false,interaction:{mode:'index',intersect:false},
-  plugins:{legend:{display:false},tooltip:{callbacks:{title:i=>i[0].label+'. év',label:c=>{const v=c.dataset.raw?c.dataset.raw[c.dataIndex]:c.parsed.y;return c.dataset.label+': '+fmtM(v)+' Ft';}}}},
-  scales:{x:{grid:{display:false},ticks:{color:cT,maxTicksLimit:11},title:{display:true,text:'Év',color:cT}},
-   y:{beginAtZero:true,grid:{color:cG},ticks:{color:cT,callback:v=>fmtM(v)},title:{display:true,text:real?'Millió Ft (mai érték)':'Millió Ft',color:cT}}}};
+ const cInk=css('--ink'),cBad=css('--bad'),cPanel=css('--panel');
+ const helper={id:'helper',
+  afterDatasetsDraw(c){const{ctx,chartArea:a,scales:{x,y}}=c;ctx.save();
+   if(zeroIdx>0){const px=x.getPixelForValue(zeroIdx);ctx.strokeStyle=cBad;ctx.setLineDash([4,4]);ctx.lineWidth=1.5;ctx.beginPath();ctx.moveTo(px,a.top);ctx.lineTo(px,a.bottom);ctx.stroke();ctx.setLineDash([]);
+    const t=(mc?'Medián: elfogy':'Elfogy')+' a '+zeroIdx+'. évben';ctx.font='500 12px IBM Plex Sans, sans-serif';const w=ctx.measureText(t).width+12;let bx=Math.min(px+6,a.right-w);ctx.fillStyle=cBad;ctx.beginPath();ctx.roundRect(bx,a.top+4,w,20,4);ctx.fill();ctx.fillStyle=cPanel;ctx.fillText(t,bx+6,a.top+18);}
+   ctx.font='500 12px IBM Plex Mono, monospace';ctx.textBaseline='middle';const placed=[];
+   c.data.datasets.forEach((ds,i)=>{if(!ds.endLabel||!c.isDatasetVisible(i))return;const n=ds.data.length-1,v=ds.data[n];let py=y.getPixelForValue(v);
+    for(const q of placed)if(Math.abs(q-py)<15)py=q+(py>=q?15:-15);placed.push(py);
+    ctx.fillStyle=ds.faint?cT:(ds.borderColor==='transparent'?cT:ds.borderColor);ctx.fillText(fmtM(ds.raw?ds.raw[n]:v),a.right+8,py);});
+   if(c.tooltip&&c.tooltip.getActiveElements().length){const px=c.tooltip.getActiveElements()[0].element.x;ctx.strokeStyle=cT;ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(px,a.top);ctx.lineTo(px,a.bottom);ctx.stroke();}
+   ctx.restore();}};
+ const opts={responsive:true,maintainAspectRatio:false,animation:false,interaction:{mode:'index',intersect:false},layout:{padding:{right:72,top:6}},
+  plugins:{legend:{display:false},tooltip:{filter:t=>!t.dataset.ref&&t.dataset.label!=='Részvények'||t.dataset.raw,itemSort:(a,b)=>b.parsed.y-a.parsed.y,
+   callbacks:{title:i=>i[0].label+'. év',label:c=>{const v=c.dataset.raw?c.dataset.raw[c.dataIndex]:c.parsed.y;return ' '+c.dataset.label+': '+fmtM(v)+' Ft';},
+    footer:i=>{const k=i[0].dataIndex;return k>0?'Költés ebben az évben: '+fmtM(spendArr[k])+' Ft':'';}}}},
+  scales:{x:{grid:{display:false},border:{color:cG},ticks:{color:cT,autoSkip:false,maxRotation:0,callback:(v,i)=>i%5===0?i:''},title:{display:true,text:'Év',color:cT}},
+   y:{beginAtZero:true,border:{display:false},grid:{color:cG},ticks:{color:cT,maxTicksLimit:6,callback:v=>fmtM(v)},title:{display:true,text:real?'Millió Ft (mai érték)':'Millió Ft',color:cT}}}};
  if(chart)chart.destroy();
- chart=new Chart($('chart'),{type:'line',data:{labels:L,datasets:ds},options:opts});
+ chart=new Chart($('chart'),{type:'line',data:{labels:L,datasets:ds},options:opts,plugins:[helper]});
 }
 function esc(s){return String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
 $('save').onclick=()=>{

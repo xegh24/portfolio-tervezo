@@ -100,6 +100,7 @@ td .acts .btn{padding:2px 8px;font-size:12px}
   <div class="group">
     <h2>Költés</h2>
     <div id="g-spend"></div>
+    <div class="kpi" style="margin:0 0 12px;background:var(--accent-bg);border-color:transparent"><div class="l">Éves költés</div><div class="v" id="yearly" style="font-size:18px"></div><div class="s" id="yearly-s"></div></div>
     <label class="toggle"><input type="checkbox" id="flex"> Rugalmas költés</label>
     <div class="hint">Ha az előző év hozama negatív, a következő évben ennyivel kevesebbet költesz.</div>
     <div id="g-flex"></div>
@@ -233,6 +234,8 @@ function run(){
  $('m-det').setAttribute('aria-pressed',!mc);$('m-mc').setAttribute('aria-pressed',mc);
  const defl=t=>real?Math.pow(1+p.inf/100,t):1;
  const ps=tot>0?p.s/tot:0;
+ const yr=W*12;$('yearly').textContent=Math.round(yr*1000).toLocaleString('hu-HU')+' Ft';
+ $('yearly-s').textContent=tot>0?'A kezdő vagyon '+(yr/1000/tot*100).toLocaleString('hu-HU',{maximumFractionDigits:2})+'%-a az első évben. Az utolsó évben inflációval: '+Math.round(yr*Math.pow(1+p.inf/100,p.y-1)*1000).toLocaleString('hu-HU')+' Ft.':'';
  if(document.activeElement!==$('mix')&&document.activeElement!==$('mix_n')){$('mix').value=Math.round(ps*100);$('mix_n').value=Math.round(ps*100);}
  $('rbS').style.width=ps*100+'%';$('rbS').hidden=ps===0;$('rbB').hidden=ps===1;
  $('rS').textContent=Math.round(ps*100)+'%';$('rB').textContent=Math.round((1-ps)*100)+'%';
